@@ -10,7 +10,7 @@ import (
 
 var repositoryFilePath = os.Getenv("HOME") + "/.todo-cli"
 
-func loadTodos() (todos []*todo.Task, doneTodos []*todo.Task, latestTaskID int) {
+func loadTasksFromRepositoryFile() (todos []*todo.Task, doneTodos []*todo.Task, latestTaskID int) {
 	f, err := os.Open(repositoryFilePath)
 	if err != nil {
 		if errors.Is(err, os.ErrNotExist) {
@@ -40,7 +40,7 @@ func loadTodos() (todos []*todo.Task, doneTodos []*todo.Task, latestTaskID int) 
 	return todos, doneTodos, latestTaskID
 }
 
-func storeTodos(m model) {
+func saveTasks(m model) {
 	f, err := os.OpenFile(repositoryFilePath, os.O_APPEND|os.O_WRONLY|os.O_TRUNC, os.ModeAppend)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {

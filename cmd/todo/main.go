@@ -40,7 +40,7 @@ type model struct {
 }
 
 func initialize() (tea.Model, tea.Cmd) {
-	todos, doneTodos, ltID := loadTodos()
+	todos, doneTodos, ltID := loadTasksFromRepositoryFile()
 	latestTaskID = ltID
 
 	cursor := 0
@@ -145,7 +145,7 @@ func normalUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 			}
 			m.mode = doneTaskListMode
 		case "q", "etc", "ctrl+c":
-			storeTodos(m)
+			saveTasks(m)
 			return m, tea.Quit
 		}
 	}
@@ -196,7 +196,7 @@ func doneTaskListUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 			}
 			m.mode = normalMode
 		case "q", "ctrl+c":
-			storeTodos(m)
+			saveTasks(m)
 			return m, tea.Quit
 		}
 	}
