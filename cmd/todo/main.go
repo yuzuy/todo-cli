@@ -12,14 +12,6 @@ import (
 	"github.com/yuzuy/todo-cli"
 )
 
-func main() {
-	p := tea.NewProgram(initialize, update, view)
-	if err := p.Start(); err != nil {
-		fmt.Printf("there's been an error: %s\n", err.Error())
-		os.Exit(1)
-	}
-}
-
 var latestTaskID int
 
 const (
@@ -78,7 +70,7 @@ type model struct {
 	editTaskNameModel input.Model
 }
 
-func initialize() (tea.Model, tea.Cmd) {
+func initializeModel() tea.Model {
 	tasks, doneTasks, ltID := loadTasksFromRepositoryFile()
 	latestTaskID = ltID
 
@@ -100,29 +92,31 @@ func initialize() (tea.Model, tea.Cmd) {
 		doneTasks:         doneTasks,
 		newTaskNameModel:  newTaskNameModel,
 		editTaskNameModel: editTaskNameModel,
-	}, nil
+	}
 }
 
-func update(msg tea.Msg, mdl tea.Model) (tea.Model, tea.Cmd) {
-	m := mdl.(model)
+func (model) Init() tea.Cmd {
+	return nil
+}
 
+func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch m.mode {
 	case normalMode:
-		return normalUpdate(msg, m)
+		return m.normalUpdate(msg)
 	case doneTaskListMode:
-		return doneTaskListUpdate(msg, m)
+		return m.doneTaskListUpdate(msg)
 	case additionalMode:
-		return additionalTaskUpdate(msg, m)
+		return m.additionalTaskUpdate(msg)
 	case editMode:
-		return editTaskUpdate(msg, m)
+		return m.editTaskUpdate(msg)
 	case helpMode:
-		return helpUpdate(msg, m)
+		return m.helpUpdate(msg)
 	}
 
 	return m, nil
 }
 
-func normalUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
+func (m model) normalUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -196,7 +190,7 @@ func normalUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 	return m, nil
 }
 
-func doneTaskListUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
+func (m model) doneTaskListUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -247,7 +241,7 @@ func doneTaskListUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 	return m, nil
 }
 
-func additionalTaskUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
+func (m model) additionalTaskUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
@@ -284,7 +278,7 @@ func additionalTaskUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 	return m, cmd
 }
 
-func editTaskUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
+func (m model) editTaskUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
@@ -314,7 +308,7 @@ func editTaskUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 	return m, cmd
 }
 
-func helpUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
+func (m model) helpUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	switch msg := msg.(type) {
 	case tea.KeyMsg:
 		switch msg.String() {
@@ -329,24 +323,22 @@ func helpUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 	return m, nil
 }
 
-func view(mdl tea.Model) string {
-	m := mdl.(model)
-
+func (m model) View() string {
 	switch m.mode {
 	case normalMode, doneTaskListMode:
-		return normalView(m)
+		return m.normalView()
 	case additionalMode:
-		return additionalTaskView(m)
+		return m.additionalTaskView()
 	case editMode:
-		return editTaskView(m)
+		return m.editTaskView()
 	case helpMode:
-		return helpView()
+		return m.helpView()
 	}
 
 	return ""
 }
 
-func normalView(m model) string {
+func (m model) normalView() string {
 	var s string
 	var title termenv.Style
 	var tasksToDisplay []*todo.Task
@@ -382,19 +374,26 @@ func normalView(m model) string {
 	return s
 }
 
-func additionalTaskView(m model) string {
+func (m model) additionalTaskView() string {
 	title := termenv.String("Additional Mode").Bold().Underline()
 	return fmt.Sprintf("%v\n\nInput the new task name\n\n%s\n", title, input.View(m.newTaskNameModel))
 }
 
-func editTaskView(m model) string {
+func (m model) editTaskView() string {
 	title := termenv.String("Edit Mode").Bold().Underline()
 	return fmt.Sprintf("%v\n\nInput the new task name\n\n%s\n", title, input.View(m.editTaskNameModel))
 }
 
-func helpView() string {
+func (m model) helpView() string {
 	title := termenv.String("USAGE").Bold().Underline()
 	return fmt.Sprintf("%v"+usage, title)
+}
+
+func main() {
+	p := tea.NewProgram(initializeModel())
+	if err := p.Start(); err != nil {
+		report(err)
+	}
 }
 
 func report(err error) {
