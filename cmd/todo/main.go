@@ -27,6 +27,45 @@ const (
 	doneTaskListMode
 	additionalMode
 	editMode
+	helpMode
+
+	usage = `
+
+--Normal Mode--
+
+j - move cursor one line down
+k - move cursor one line up
+a - add a new task(move to additional mode)
+d - remove a task
+e - edit the task name(mode to edit mode)
+h - help(switch to help mode)
+x, enter - mark as done
+t - switch to done tasks list mode
+q - save tasks and close this app
+
+--Done Tasks List Mode--
+
+j - move cursor one line down
+k - move cursor one line up
+d - remove a task
+t - switch to normal mode
+x, enter - mark as not done
+q - save tasks and close this app
+
+--Additional Mode--
+
+q - switch to normal mode
+enter - submit
+
+--Edit Mode--
+
+q - switch to normal mode
+enter - submit
+
+--Help Mode--
+
+q - switch to normal mode
+`
 )
 
 type model struct {
@@ -40,11 +79,11 @@ type model struct {
 }
 
 func initialize() (tea.Model, tea.Cmd) {
-	todos, doneTodos, ltID := loadTasksFromRepositoryFile()
+	tasks, doneTasks, ltID := loadTasksFromRepositoryFile()
 	latestTaskID = ltID
 
 	cursor := 0
-	if len(todos) != 0 {
+	if len(tasks) != 0 {
 		cursor = 1
 	}
 
@@ -57,8 +96,8 @@ func initialize() (tea.Model, tea.Cmd) {
 	return model{
 		cursor:            cursor,
 		mode:              normalMode,
-		tasks:             todos,
-		doneTasks:         doneTodos,
+		tasks:             tasks,
+		doneTasks:         doneTasks,
 		newTaskNameModel:  newTaskNameModel,
 		editTaskNameModel: editTaskNameModel,
 	}, nil
@@ -76,6 +115,8 @@ func update(msg tea.Msg, mdl tea.Model) (tea.Model, tea.Cmd) {
 		return additionalTaskUpdate(msg, m)
 	case editMode:
 		return editTaskUpdate(msg, m)
+	case helpMode:
+		return helpUpdate(msg, m)
 	}
 
 	return m, nil
@@ -113,6 +154,8 @@ func normalUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 			m.mode = editMode
 			m.editTaskNameModel.Placeholder = m.tasks[m.cursor-1].Name
 			return m, input.Blink(m.editTaskNameModel)
+		case "h":
+			m.mode = helpMode
 		case "x", "enter":
 			if m.cursor == 0 {
 				break
@@ -144,7 +187,7 @@ func normalUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 				m.cursor = 1
 			}
 			m.mode = doneTaskListMode
-		case "q", "etc", "ctrl+c":
+		case "q", "ctrl+c":
 			saveTasks(m)
 			return m, tea.Quit
 		}
@@ -175,6 +218,13 @@ func doneTaskListUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 			} else {
 				m.cursor = 1
 			}
+		case "t":
+			if len(m.tasks) == 0 {
+				m.cursor = 0
+			} else {
+				m.cursor = 1
+			}
+			m.mode = normalMode
 		case "x", "enter":
 			if m.cursor == 0 {
 				break
@@ -188,13 +238,6 @@ func doneTaskListUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 			} else {
 				m.cursor = 1
 			}
-		case "t":
-			if len(m.tasks) == 0 {
-				m.cursor = 0
-			} else {
-				m.cursor = 1
-			}
-			m.mode = normalMode
 		case "q", "ctrl+c":
 			saveTasks(m)
 			return m, tea.Quit
@@ -211,8 +254,9 @@ func additionalTaskUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
+			saveTasks(m)
 			return m, tea.Quit
-		case "etc", "q":
+		case "q":
 			m.mode = normalMode
 			m.newTaskNameModel.Reset()
 			return m, nil
@@ -247,8 +291,9 @@ func editTaskUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
+			saveTasks(m)
 			return m, tea.Quit
-		case "etc", "q":
+		case "q":
 			m.mode = normalMode
 			m.editTaskNameModel.Reset()
 			return m, nil
@@ -269,6 +314,21 @@ func editTaskUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
 	return m, cmd
 }
 
+func helpUpdate(msg tea.Msg, m model) (tea.Msg, tea.Cmd) {
+	switch msg := msg.(type) {
+	case tea.KeyMsg:
+		switch msg.String() {
+		case "ctrl+c":
+			saveTasks(m)
+			return m, tea.Quit
+		case "q":
+			m.mode = normalMode
+		}
+	}
+
+	return m, nil
+}
+
 func view(mdl tea.Model) string {
 	m := mdl.(model)
 
@@ -279,6 +339,8 @@ func view(mdl tea.Model) string {
 		return additionalTaskView(m)
 	case editMode:
 		return editTaskView(m)
+	case helpMode:
+		return helpView()
 	}
 
 	return ""
@@ -328,6 +390,11 @@ func additionalTaskView(m model) string {
 func editTaskView(m model) string {
 	title := termenv.String("Edit Mode").Bold().Underline()
 	return fmt.Sprintf("%v\n\nInput the new task name\n\n%s\n", title, input.View(m.editTaskNameModel))
+}
+
+func helpView() string {
+	title := termenv.String("USAGE").Bold().Underline()
+	return fmt.Sprintf("%v"+usage, title)
 }
 
 func report(err error) {
