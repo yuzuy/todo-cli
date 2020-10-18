@@ -182,7 +182,7 @@ func (m model) normalUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 			m.mode = doneTaskListMode
 		case "q", "ctrl+c":
-			saveTasks(m)
+			m.saveTasks()
 			return m, tea.Quit
 		}
 	}
@@ -233,7 +233,7 @@ func (m model) doneTaskListUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				m.cursor = 1
 			}
 		case "q", "ctrl+c":
-			saveTasks(m)
+			m.saveTasks()
 			return m, tea.Quit
 		}
 	}
@@ -248,7 +248,7 @@ func (m model) additionalTaskUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
-			saveTasks(m)
+			m.saveTasks()
 			return m, tea.Quit
 		case "q":
 			m.mode = normalMode
@@ -285,7 +285,7 @@ func (m model) editTaskUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
-			saveTasks(m)
+			m.saveTasks()
 			return m, tea.Quit
 		case "q":
 			m.mode = normalMode
@@ -313,7 +313,7 @@ func (m model) helpUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.String() {
 		case "ctrl+c":
-			saveTasks(m)
+			m.saveTasks()
 			return m, tea.Quit
 		case "q":
 			m.mode = normalMode

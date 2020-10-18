@@ -40,7 +40,7 @@ func loadTasksFromRepositoryFile() (todos []*todo.Task, doneTodos []*todo.Task, 
 	return todos, doneTodos, latestTaskID
 }
 
-func saveTasks(m model) {
+func (m model) saveTasks() {
 	f, err := os.OpenFile(repositoryFilePath, os.O_APPEND|os.O_WRONLY|os.O_TRUNC, os.ModeAppend)
 	if err != nil {
 		if !errors.Is(err, os.ErrNotExist) {
