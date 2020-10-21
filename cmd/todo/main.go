@@ -46,12 +46,12 @@ q - save tasks and close this app
 
 --Additional Mode--
 
-q - switch to normal mode
+ctrl+q - switch to normal mode
 enter - submit
 
 --Edit Mode--
 
-q - switch to normal mode
+ctrl+q - switch to normal mode
 enter - submit
 
 --Help Mode--
@@ -250,7 +250,7 @@ func (m model) additionalTaskUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			m.saveTasks()
 			return m, tea.Quit
-		case "q":
+		case "ctrl+q":
 			m.mode = normalMode
 			m.newTaskNameInput.Reset()
 			return m, nil
@@ -287,7 +287,7 @@ func (m model) editTaskUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 		case "ctrl+c":
 			m.saveTasks()
 			return m, tea.Quit
-		case "q":
+		case "ctrl+q":
 			m.mode = normalMode
 			m.editTaskNameInput.Reset()
 			return m, nil
