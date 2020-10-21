@@ -1,6 +1,6 @@
 # todo-cli
 
-A CLI todo app
+A TUI todo app
 
 ## Installation
 
