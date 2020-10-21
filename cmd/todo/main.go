@@ -66,8 +66,8 @@ type model struct {
 	tasks     []*todo.Task
 	doneTasks []*todo.Task
 
-	newTaskNameModel  input.Model
-	editTaskNameModel input.Model
+	newTaskNameInput  input.Model
+	editTaskNameInput input.Model
 }
 
 func initializeModel() tea.Model {
@@ -90,8 +90,8 @@ func initializeModel() tea.Model {
 		mode:              normalMode,
 		tasks:             tasks,
 		doneTasks:         doneTasks,
-		newTaskNameModel:  newTaskNameModel,
-		editTaskNameModel: editTaskNameModel,
+		newTaskNameInput:  newTaskNameModel,
+		editTaskNameInput: editTaskNameModel,
 	}
 }
 
@@ -130,7 +130,7 @@ func (m model) normalUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		case "a":
 			m.mode = additionalMode
-			return m, input.Blink(m.newTaskNameModel)
+			return m, input.Blink(m.newTaskNameInput)
 		case "d":
 			if m.cursor == 0 {
 				break
@@ -146,8 +146,8 @@ func (m model) normalUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				break
 			}
 			m.mode = editMode
-			m.editTaskNameModel.Placeholder = m.tasks[m.cursor-1].Name
-			return m, input.Blink(m.editTaskNameModel)
+			m.editTaskNameInput.Placeholder = m.tasks[m.cursor-1].Name
+			return m, input.Blink(m.editTaskNameInput)
 		case "h":
 			m.mode = helpMode
 		case "x", "enter":
@@ -252,28 +252,28 @@ func (m model) additionalTaskUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "q":
 			m.mode = normalMode
-			m.newTaskNameModel.Reset()
+			m.newTaskNameInput.Reset()
 			return m, nil
 		case "enter":
-			if m.newTaskNameModel.Value() == "" {
+			if m.newTaskNameInput.Value() == "" {
 				return m, nil
 			}
 
 			m.tasks = append(m.tasks, &todo.Task{
 				ID:        latestTaskID + 1,
-				Name:      m.newTaskNameModel.Value(),
+				Name:      m.newTaskNameInput.Value(),
 				CreatedAt: time.Now(),
 			})
 			latestTaskID++
 
 			m.cursor++
 			m.mode = normalMode
-			m.newTaskNameModel.Reset()
+			m.newTaskNameInput.Reset()
 			return m, nil
 		}
 	}
 
-	m.newTaskNameModel, cmd = input.Update(msg, m.newTaskNameModel)
+	m.newTaskNameInput, cmd = input.Update(msg, m.newTaskNameInput)
 
 	return m, cmd
 }
@@ -289,21 +289,21 @@ func (m model) editTaskUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		case "q":
 			m.mode = normalMode
-			m.editTaskNameModel.Reset()
+			m.editTaskNameInput.Reset()
 			return m, nil
 		case "enter":
-			if m.editTaskNameModel.Value() == "" {
+			if m.editTaskNameInput.Value() == "" {
 				return m, nil
 			}
-			m.tasks[m.cursor-1].Name = m.editTaskNameModel.Value()
+			m.tasks[m.cursor-1].Name = m.editTaskNameInput.Value()
 
 			m.mode = normalMode
-			m.editTaskNameModel.Reset()
+			m.editTaskNameInput.Reset()
 			return m, nil
 		}
 	}
 
-	m.editTaskNameModel, cmd = input.Update(msg, m.editTaskNameModel)
+	m.editTaskNameInput, cmd = input.Update(msg, m.editTaskNameInput)
 
 	return m, cmd
 }
@@ -376,12 +376,12 @@ func (m model) normalView() string {
 
 func (m model) additionalTaskView() string {
 	title := termenv.String("Additional Mode").Bold().Underline()
-	return fmt.Sprintf("%v\n\nInput the new task name\n\n%s\n", title, input.View(m.newTaskNameModel))
+	return fmt.Sprintf("%v\n\nInput the new task name\n\n%s\n", title, input.View(m.newTaskNameInput))
 }
 
 func (m model) editTaskView() string {
 	title := termenv.String("Edit Mode").Bold().Underline()
-	return fmt.Sprintf("%v\n\nInput the new task name\n\n%s\n", title, input.View(m.editTaskNameModel))
+	return fmt.Sprintf("%v\n\nInput the new task name\n\n%s\n", title, input.View(m.editTaskNameInput))
 }
 
 func (m model) helpView() string {
