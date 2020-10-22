@@ -106,7 +106,7 @@ func (m model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case doneTaskListMode:
 		return m.doneTaskListUpdate(msg)
 	case additionalMode:
-		return m.additionalTaskUpdate(msg)
+		return m.addingTaskUpdate(msg)
 	case editMode:
 		return m.editTaskUpdate(msg)
 	case helpMode:
@@ -241,7 +241,7 @@ func (m model) doneTaskListUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	return m, nil
 }
 
-func (m model) additionalTaskUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
+func (m model) addingTaskUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 	var cmd tea.Cmd
 
 	switch msg := msg.(type) {
@@ -328,7 +328,7 @@ func (m model) View() string {
 	case normalMode, doneTaskListMode:
 		return m.normalView()
 	case additionalMode:
-		return m.additionalTaskView()
+		return m.addingTaskView()
 	case editMode:
 		return m.editTaskView()
 	case helpMode:
@@ -374,7 +374,7 @@ func (m model) normalView() string {
 	return s
 }
 
-func (m model) additionalTaskView() string {
+func (m model) addingTaskView() string {
 	title := termenv.String("Additional Mode").Bold().Underline()
 	return fmt.Sprintf("%v\n\nInput the new task name\n\n%s\n", title, input.View(m.newTaskNameInput))
 }
