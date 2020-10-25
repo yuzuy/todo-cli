@@ -12,8 +12,6 @@ import (
 	"github.com/yuzuy/todo-cli"
 )
 
-var latestTaskID int
-
 const (
 	normalMode = iota
 	doneTaskListMode
@@ -61,10 +59,11 @@ q - switch to normal mode
 )
 
 type model struct {
-	cursor    int
-	mode      int
-	tasks     []*todo.Task
-	doneTasks []*todo.Task
+	cursor       int
+	mode         int
+	latestTaskID int
+	tasks        []*todo.Task
+	doneTasks    []*todo.Task
 
 	newTaskNameInput  input.Model
 	editTaskNameInput input.Model
@@ -72,7 +71,6 @@ type model struct {
 
 func initializeModel() tea.Model {
 	tasks, doneTasks, ltID := loadTasksFromRepositoryFile()
-	latestTaskID = ltID
 
 	cursor := 0
 	if len(tasks) != 0 {
@@ -88,6 +86,7 @@ func initializeModel() tea.Model {
 	return model{
 		cursor:            cursor,
 		mode:              normalMode,
+		latestTaskID:      ltID,
 		tasks:             tasks,
 		doneTasks:         doneTasks,
 		newTaskNameInput:  newTaskNameModel,
@@ -259,12 +258,12 @@ func (m model) addingTaskUpdate(msg tea.Msg) (tea.Model, tea.Cmd) {
 				return m, nil
 			}
 
+			m.latestTaskID++
 			m.tasks = append(m.tasks, &todo.Task{
-				ID:        latestTaskID + 1,
+				ID:        m.latestTaskID,
 				Name:      m.newTaskNameInput.Value(),
 				CreatedAt: time.Now(),
 			})
-			latestTaskID++
 
 			m.cursor++
 			m.mode = normalMode
